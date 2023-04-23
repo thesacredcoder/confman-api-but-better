@@ -18,6 +18,11 @@ app.use("/users", userRoute);
 app.use("/papers", paperRoute);
 app.use("/conferences", conferenceRoute);
 
+app,
+  get("/health-check", (req, res) => {
+    res.json({ message: "The app is running" });
+  });
+
 const port = process.env.PORT;
 
 app.listen(port, () => {
