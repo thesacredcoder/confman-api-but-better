@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  AUTHOR
+  REVIEWER
+  CONFERENCE_MANAGER
+  SUPERADMIN
+}
+
+enum ConferenceStatus {
+  ONGOING
+  CLOSED
+  UPCOMING
+}
+
+model User {
+  id                  Int          @id @default(autoincrement())
+  name                String
+  email               String       @unique
+  password            String
+  role                UserRole     @default(AUTHOR)
+  isVerified          Boolean      @default(false)
+  about               String?
+  createdAt           DateTime     @default(now())
+  papers              Paper[]      @relation("Author")
+  coAuthoredPapers    Paper[]      @relation("CoAuthor")
+  conferences         Conference[] @relation("ConferenceManager")
+  authoredConferences Conference[] @relation("ConferenceAuthors")
+  reviewerConferences Conference[] @relation("ConferenceReviewers")
+}
+
+model Paper {
+  id            Int         @id @default(autoincrement())
+  title         String
+  abstract      String
+  keywords      String[]
+  rating        Float?
+  plagScore     Float?
+  fileUrl       String
+  plagReportUrl String?
+  verdict       Boolean?
+  author        User        @relation("Author", fields: [authorId], references: [id])
+  authorId      Int
+  coAuthors     User[]      @relation("CoAuthor")
+  conferenceId  Int?
+  conference    Conference? @relation("ConferencePapers", fields: [conferenceId], references: [id])
+}
+
+model Conference {
+  id           Int              @id @default(autoincrement())
+  title        String
+  description  String
+  startDate    DateTime
+  endDate      DateTime
+  status       ConferenceStatus
+  topics       String[]
+  organization String
+  managerId    Int
+  manager      User             @relation("ConferenceManager", fields: [managerId], references: [id])
+  reviewers    User[]           @relation("ConferenceReviewers")
+  authors      User[]           @relation("ConferenceAuthors")
+  papers       Paper[]          @relation("ConferencePapers")
+}
